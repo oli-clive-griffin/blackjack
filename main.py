@@ -2,51 +2,17 @@ import functools
 import os
 import random
 
-
-# TODO
-# look into polymorphism / inheritance, idk what it's called but the python equivalent of extends in js.
-# because the Dealer and Player classes here share a lot of methods
-
-class Dealer:
-  def __init__(self):
-    suits = ["spades", "clubs", "diamonds", "hearts"]
-    self.deck =[Card(number, suit) 
-                for suit in suits 
-                  for number in [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 11]]
-    self.hand = []
+# TODO: whwen player stands, make dealer draw cards up to 17 points, currently, dealer only ever draws 2
   
-  def get_score(self):
-    numbers = [card.number for card in self.hand]
-
-    # changes aces from 11s to 1s until the total score drops below 22, if ever.
-    if sum(numbers) > 21 and 11 in numbers:
-      while 11 in numbers:
-        numbers[numbers.index(11)] = 1
-        if sum(numbers) <= 21:
-          break
-    
-    return sum(numbers)
-
+class Card:
+  def __init__(self, value, suit):
+    self.value = value
+    self.suit = suit
 
   def __str__(self):
-    return_string = ""
-    for card in self.deck:
-      return_string += f"{card.__str__()} \n"
-    return return_string
-    
-  def receive_card(self, card):
-    self.hand.append(card)
-  
-  #This needs to be remade, it's messy
-  def shuffle(self):
-    for i in range(len(self.deck)):
-      ran_card_number = random.randrange(0, len(self.deck))
-      self.deck[i], self.deck[ran_card_number] = self.deck[ran_card_number], self.deck[i]
+    return f"{self.value} of {self.suit}"
 
-  def deal_card(self, player):
-    player.receive_card(self.deck.pop(0))
 
-  
 class Player:
   def __init__(self):
     self.hand = []
@@ -61,26 +27,41 @@ class Player:
     self.hand.append(card)
 
   def get_score(self):
-    numbers = [card.number for card in self.hand]
+    card_values = [card.value for card in self.hand]
 
     # changes aces from 11s to 1s until the total score drops below 22, if ever.
-    if sum(numbers) > 21 and 11 in numbers:
-      while 11 in numbers:
-        numbers[numbers.index(11)] = 1
-        print(numbers)
-        if sum(numbers) <= 21:
-          print(numbers)
+    if sum(card_values) > 21 and 11 in card_values:
+      while 11 in card_values:
+        card_values[card_values.index(11)] = 1
+        if sum(card_values) <= 21:
           break
     
-    return sum(numbers)
+    return sum(card_values)
 
-class Card:
-  def __init__(self, number, suit):
-    self.number = number
-    self.suit = suit
 
+class Dealer(Player):
+  def __init__(self):
+    suits = ["spades", "clubs", "diamonds", "hearts"]
+    values = [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 11]
+    self.deck =[Card(value, suit) 
+                for suit in suits 
+                for value in values]
+    self.hand = []
+  
   def __str__(self):
-    return f"{self.number} of {self.suit}"
+    return_string = ""
+    for card in self.deck:
+      return_string += f"{card.__str__()} \n"
+    return return_string
+    
+  # could this be made far more efficient?
+  def shuffle(self):
+    for i in range(len(self.deck)):
+      ran_card_value = random.randrange(0, len(self.deck))
+      self.deck[i], self.deck[ran_card_value] = self.deck[ran_card_value], self.deck[i]
+
+  def deal_card(self, player):
+    player.receive_card(self.deck.pop(0))
 
 
 class Game:
@@ -88,7 +69,6 @@ class Game:
     self.player = player
     self.dealer = dealer
     self.winner = None
-  
 
   #asks the player if they want to hit again and returns boolean
   def another_card(self):
@@ -108,6 +88,7 @@ class Game:
         print(card)
     else:
       print(self.dealer.hand[0])
+      print("? of ? ")
     print("\n")
     print("Player:")
     print(self.player)
@@ -119,6 +100,7 @@ class Game:
 
     self.dealer.deal_card(self.player)
     self.dealer.deal_card(self.player)
+
     self.dealer.deal_card(self.dealer)
     self.dealer.deal_card(self.dealer)
 
@@ -140,19 +122,25 @@ class Game:
     os.system('clear')
     self.show_hands(show_dealer_hand=True)
 
-    print(f"{self.winner} wins!")    
+    print(f"{self.winner} wins! \n")    
 
 
 #--------------------------------
 
-player1 = Player()
-dealer1 = Dealer()
 
-game1 = Game(player1, dealer1)
+while True:
+  player1 = Player()
+  dealer1 = Dealer()
+  game1 = Game(player1, dealer1)
 
-dealer1.shuffle()
+  game1.play()
 
-game1.play()
+  play_again = None
+  while play_again not in ["Y", "y", "", "N", "n"]:
+    play_again = input("would you like to play again? (y/n) \n")
+
+  if play_again in ["N", "n"]:
+    break
 
 
 # Blackjack rules cos I don't actually know them and I just searched them up
